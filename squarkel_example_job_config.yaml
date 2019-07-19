@@ -1,0 +1,134 @@
+source_connection_id: key_for_job_source_in_sources_cfg # (str) required setting
+destination_schema: example_job  # (str) same as name of job file, applies to every table config unless overridden
+spark_settings: # None if either of below key value pairs not set
+  max_executors: 4 # (int) [default: 2]
+  executor_memory: 4G # (str) [default: 2G] in GB
+
+ # if `tables` does not exist then all tables will be copied from the source using default settings.
+ # If `tables` does exist, but a table is not listed, then it will be copied the configuration from `all_tables_default`.
+ # If `tables` does exist, but a table is listed with zero options, just the table name, then it will also use `all_tables_default`
+ # Below `all_tables_default` is just an example
+all_tables_default:
+   drop_existing_projections: False # (bool) [default: False]
+
+tables:
+
+  # A table to exclude from this job
+  apple:
+    is_excluded: True # (bool) [default: False]
+
+  # A table to load incrementally, with deltas retrieved using a table specific SQL query, which can be complex.
+  # Fast, but requires hardcoding.
+  banana:
+    incremental_load_rules: # [default: None] None if subquery, frequency_unit, or hash not set
+      subquery: <sql query for incremental data for this banana> # (str) Required if incremental_load_rules is set and incremental_hash is False
+        frequency_unit: day # (str) hour | day | month | year, required with subquery
+        frequency: 1 # (int) In units of frequency_unit, required with subquery
+
+  # A table to load incrementally, with deltas retrieved using a last-updated column.
+  # Fast, but requires a well maintained last-updated column.
+  cherry:
+    incremental_load_rules: # [default: None] one if subquery, frequency_unit, or hash not set
+      last_updated_column: some_well_managed_date_column # (str) Must be a datetime data type
+        frequency_unit: day # (str) hour | day | month | year, required with last_updated_column
+        frequency: 1 # (int) In units of frequency_unit, required with last_updated_column
+
+  # A table to load incrementally, with deltas computed using by comparing a hash of the source to a hash of the destination.
+  # Slower, but should work everywhere. More computationlly expensive. More bandwidth intensive.
+  dragonfruit:
+    incremental_load_rules: # [default: None] None if subquery, frequency_unit, or hash not set
+      hash: True # (bool) [default: False]
+
+  # A table to load destructively, throwing away everything in the destination before loading, with no projections being made.
+  # Slowest method of loading a table.
+  # By not passing in incremental_load_rules the load is interpreted to be destructive.
+  elderberry:
+    drop_existing_projections: True # (bool) [default: False]
+
+  # A table to load destructively, while retaining existing special Vertica projections
+  # Slowest method of loading a table, but significantly improves query performance on the table for downstream users
+  # By not passing in incremental_load_rules the load is interpreted to be destructive.
+  fig:
+    drop_existing_projections: False # (bool) [default: False]
+
+  # A table to load destructively, but applying Squark Super Projections
+  # Slowest method of loading a table, but improves query performance on the table for downstream users
+  # By not passing in incremental_load_rules the load is interpreted to be destructive.
+  gooseberry:
+    super_projection_rules: # [default: None]
+      projection_name: projection_01 # (str) Required for super_projection_rules
+      order_by_columns: # (List[str]) Required for super_projection_rules
+        - dateStamp
+        - id
+      segment_by_columns: # (List[str]) Required for super_projection_rules
+        - lastName
+        - firstName
+
+  # A table to load using Spark JDBC partitioning rules
+  huckleberry:
+    partitioning_rules: # [default: None]
+      partition_column: a_number MOD 10 # (str) Required for partitioning_rules
+      lower_bound: 0 # (int) Required for partitioning_rules
+      upper_bound: 9 # (int) Required for partitioning_rules
+      num_partitions: 10 # (int) Required for partitioning_rules
+
+  # A table to load, including only certain columns
+  indian_plum:
+    columns_to_include: # (List[str]) [default: None] (None = include all columns as per usual)
+      - amazing_column
+      - also_cool
+
+  # A table to load, excluding certain columns
+  jackfruit:
+    columns_to_exclude: # (List[str]) [default: None]
+      - useless_column
+      - very_wide_column
+
+  # A table to load, skipping certain records by column
+  # This section TBD
+  kiwi:
+    record_exclusion_rules: # [default: None]
+      columns:
+        some_column:
+          type: int # (str) int | str | datetime
+          values: # (List[type])
+            - bad_value_a
+            - bad_value_b
+        another_column:
+          type: str # (str) int | str | datetime
+          values: # (List[type])
+            - bad_value_x
+            - bad_value_y
+
+  # A table to load to a different schema than the jobs `destination_schema`
+  lemon:
+    destination_schema: somewhere_else # (str) [default: None]. Evaluates to be the same as the jobs `destination_schema` unless set here
+
+  # A table to load in with a different destination table name
+  mango:
+    destination_table: mango_salsa # (str) [default: None]. Evaluates to be the same as the source tables name unless set here
+
+  # A table to load in using an Intial Data Load pattern (for very large tables)
+  # What counts as large? This section TBD
+  nectarine:
+    initial_data_load_rules: # [default: None].
+      idl_column: create_date # (str) Required for initial_data_load_rules
+      num_iterations: 100 # (int) Required for initial_data_load_rules
+      lower_bound: 1900 # (int) Required for initial_data_load_rules
+      upper_bound: 2000 # (int) Required for initial_data_load_rules
+
+  # Two tables to load in a certain jenkins split-multijob
+  orange:
+    multi_job_split: 1 # (int) [default: None]. None = not split. 1 = process in split-1, 2 = process in split-2, etc
+  pear:
+    multi_job_split: 2 # (int) [default: None]. None = not split. 1 = process in split-1, 2 = process in split-2, etc
+
+  # A table to skip the source row count
+  quince:
+    skip_source_row_count: True # (bool) [default: False]
+
+  # A table to load one or more columns as NULL
+  raspberry:
+    columns_to_nullify: # (List[str]) [default: None]
+      - column_one #
+      - column_eighty
