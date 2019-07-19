@@ -1,0 +1,58 @@
+# Default values for all the table paramaters unless otherwise set
+# Everything is false or None unless set
+is_excluded: False # (bool)
+skip_source_row_count: False # (bool)
+drop_existing_projections: False # (bool)
+multi_job_split: None # (int)
+destination_table: None # (str)
+destination_schema: None # (str)
+columns_to_nullify: None # (List[str])
+columns_to_include: None # (List[str])
+columns_to_exclude: None # (List[str])
+partitioning_rules: None # (loaded as Dict)
+record_exclusion_rules: None # (loaded as Dict)
+incremental_load_rules: None # (loaded as Dict)
+super_projection_rules: None # (loaded as Dict)
+initial_data_load_rules: None # (loaded as Dict)
+
+# The rules that are loaded as dicts have a static set of keys that can be assigned.
+# We could load them as Dict or make simple dataclasses for them.
+
+# All keys for the incremental_load_rules
+partitioning_rules:
+  partition_column: # (str)
+  lower_bound: # (int)
+  upper_bound: # (int)
+  num_partitions: # (int)
+
+# All keys for the record_exclusion_rules
+record_exclusion_rules:
+  columns: # (Dict)
+    column_name: # (str)
+      type: # (str)
+      values: # (type)
+
+# All keys for the incremental_load_rules
+# subquery | last_updated_column | hash
+incremental_load_rules:
+  subquery: # (str)
+    frequency_unit: # (str)
+    frequency: # (int)
+  last_updated_column:
+    frequency_unit: # (str)
+    frequency: # (int)
+  hash: # (bool)
+
+# All keys for super_projction_rules
+super_projection_rules:
+  projection_name: # (str)
+  order_by_columns: # (List[str])
+  segment_by_columns: # (List[str])
+
+# All keys for initial_data_load_rules
+initial_data_load_rules:
+  idl_column: # (str)
+  num_iterations: # (int)
+  lower_bound: # (int)
+  upper_bound: # (int)
+
